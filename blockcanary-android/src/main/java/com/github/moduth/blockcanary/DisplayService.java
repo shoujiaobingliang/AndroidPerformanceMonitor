@@ -21,6 +21,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.util.Log;
 
 import com.github.moduth.blockcanary.internal.BlockInfo;
@@ -33,6 +34,7 @@ import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
 import static android.os.Build.VERSION.SDK_INT;
 import static android.os.Build.VERSION_CODES.HONEYCOMB;
 import static android.os.Build.VERSION_CODES.JELLY_BEAN;
+import static android.os.Build.VERSION_CODES.S;
 
 final class DisplayService implements BlockInterceptor {
 
@@ -43,7 +45,12 @@ final class DisplayService implements BlockInterceptor {
         Intent intent = new Intent(context, DisplayActivity.class);
         intent.putExtra("show_latest", blockInfo.timeStart);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        PendingIntent pendingIntent = PendingIntent.getActivity(context, 1, intent, FLAG_UPDATE_CURRENT);
+        PendingIntent pendingIntent = null;
+        if (SDK_INT < S) {
+            pendingIntent = PendingIntent.getActivity(context, 1, intent, FLAG_UPDATE_CURRENT);
+        } else {
+            pendingIntent = PendingIntent.getActivity(context, 1, intent, FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        }
         String contentTitle = context.getString(R.string.block_canary_class_has_blocked, blockInfo.timeStart);
         String contentText = context.getString(R.string.block_canary_notification_message);
         show(context, contentTitle, contentText, pendingIntent);
